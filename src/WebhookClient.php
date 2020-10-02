@@ -505,7 +505,13 @@ class WebhookClient extends RichMessage
             if ($message instanceof Payload) {
                 $out['payload'] = $message->render();
             } else {
-                $messages[] = $message->render();
+                $rendered = $message->render();
+
+                if (is_array($rendered)) {
+                    $messages = array_merge($messages, $rendered);
+                } else {
+                    $messages[] = $rendered;
+                }
             }
         }
 
