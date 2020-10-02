@@ -22,6 +22,10 @@
         {
             "name": "Eris Ristemena",
             "email": "e.ristemena@gmail.com"
+        },
+        {
+            "name": "Ryan Priebe",
+            "email": "rpriebe@me.com"
         }
     ],
     "require-dev": {
