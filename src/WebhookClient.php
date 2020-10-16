@@ -516,7 +516,13 @@ class WebhookClient extends RichMessage
         if ($this->text) {
             $out['fulfillmentText'] = $this->text;
         } else if (sizeof($messages) > 0 && is_null($this->text)) {
-            $out['fulfillmentText'] = implode("\n", $messages);
+            $msgs = [];
+
+            for ($i = 0; $i < sizeof($messages); $i++) {
+                $msgs[$i] = $messages[$i]->text->text[0];
+            }
+
+            $out['fulfillmentText'] = implode("\n", $msgs);
         }
 
         $outgoingContexts = [];
