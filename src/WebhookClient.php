@@ -523,9 +523,14 @@ class WebhookClient extends RichMessage
             $out['fulfillmentText'] = $this->text;
         } else if (sizeof($messages) > 0 && is_null($this->text)) {
             $msgs = [];
+            $keys = array_keys($messages);
 
-            for ($i = 0; $i < sizeof($messages); $i++) {
-                $msgs[$i] = $messages[$i]->text->text[0];
+            if (is_numeric($keys[0])) {
+                for ($i = 0; $i < sizeof($messages); $i++) {
+                    $msgs[$i] = $messages[$i]->text->text[0];
+                }
+            } else {
+                $msgs[] = $messages['text']['text'][0];
             }
 
             $out['fulfillmentText'] = implode("\n", $msgs);
