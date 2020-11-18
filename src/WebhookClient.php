@@ -507,7 +507,7 @@ class WebhookClient extends RichMessage
             } else {
                 $rendered = $message->render();
 
-                if (is_array($rendered)) {
+                if (is_array($rendered) && !in_array('simpleResponses', array_keys($rendered))) {
                     $messages = array_merge($messages, $rendered);
                 } else {
                     $messages[] = $rendered;
@@ -519,21 +519,24 @@ class WebhookClient extends RichMessage
             $out['fulfillmentMessages'] = $messages;
         }
 
+        $keys = array_keys($messages);
+
         if ($this->text) {
             $out['fulfillmentText'] = $this->text;
-        } else if (sizeof($messages) > 0 && is_null($this->text)) {
-            $msgs = [];
-            $keys = array_keys($messages);
+        } else if ((sizeof($messages) > 0 && is_null($this->text))) {
+            if (!in_array('simpleResponses', $keys)) {
+                $msgs = [];
 
-            if (is_numeric($keys[0])) {
-                for ($i = 0; $i < sizeof($messages); $i++) {
-                    $msgs[$i] = $messages[$i]->text->text[0];
+                if (is_numeric($keys[0])) {
+                    for ($i = 0; $i < sizeof($messages); $i++) {
+                        $msgs[$i] = $messages[$i]->text->text[0];
+                    }
+                } elseif ($keys[0] == 'text') {
+                    $msgs[] = $messages['text']['text'][0];
                 }
-            } else {
-                $msgs[] = $messages['text']['text'][0];
-            }
 
-            $out['fulfillmentText'] = implode("\n", $msgs);
+                $out['fulfillmentText'] = implode("\n", $msgs);
+            }
         }
 
         $outgoingContexts = [];
