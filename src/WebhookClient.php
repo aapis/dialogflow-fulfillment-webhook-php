@@ -6,6 +6,7 @@ use Dialogflow\Action\Conversation;
 use Dialogflow\RichMessage\Payload;
 use Dialogflow\RichMessage\RichMessage;
 use Dialogflow\RichMessage\Text;
+use Dialogflow\RichMessage\TextList;
 use RuntimeException;
 
 class WebhookClient extends RichMessage
@@ -504,7 +505,7 @@ class WebhookClient extends RichMessage
         foreach ($this->messages as $message) {
             if ($message instanceof Payload) {
                 $out['payload'] = $message->render();
-            } else if ($message instanceof \App\Api\Generic\TextList) {
+            } else if ($message instanceof TextList) {
                 if ($this->requestSource == 'google') {
                     $pushed = array_push($messages, $message->render());
                     $out['fulfillmentMessages'] = $messages;
