@@ -145,6 +145,8 @@ class WebhookClient extends RichMessage
                 $this->requestSource = $this->originalRequest['source'];
             } elseif (isset($this->originalRequest['payload']['source'])) {
                 $this->requestSource = $this->originalRequest['payload']['source'];
+            } elseif (isset($this->originalRequest['payload']['SmsSid'])) {
+                $this->requestSource = 'SMS';
             }
         }
 
@@ -506,15 +508,29 @@ class WebhookClient extends RichMessage
             if ($message instanceof Payload) {
                 $out['payload'] = $message->render();
             } else if ($message instanceof TextList) {
+                $pushed = array_push($messages, $message->render());
+
                 if ($this->requestSource == 'google') {
-                    $pushed = array_push($messages, $message->render());
-                    $out['fulfillmentMessages'] = $messages;
+                    // this is correct due to how this response type is built
+                    // (compared to, say, a similar condition a few lines down which
+                    // appears to indicate the opposite)
+                    $out['fulfillmentMessages'] = $messages[0];
                 } else {
-                    $out['fulfillmentMessages'] = array_merge($messages, $message->render());
+                    $out['fulfillmentMessages'] = array_merge(
+                        $messages,
+                        $message->render()
+                    );
                 }
             } else {
                 $pushed = array_push($messages, $message->render());
-                $out['fulfillmentMessages'] = $messages;
+
+                if ($this->requestSource == 'google') {
+                    // google response expects an array
+                    $out['fulfillmentMessages'] = $messages;
+                } else {
+                    // non-google responses expect the message object directly
+                    $out['fulfillmentMessages'] = $messages[0];
+                }
             }
         }
 
@@ -523,17 +539,18 @@ class WebhookClient extends RichMessage
         if ($this->text) {
             $out['fulfillmentText'] = $this->text;
         } else if ((sizeof($messages) > 0 && is_null($this->text))) {
-            if (!in_array('simpleResponses', $keys)) {
+            if ($this->requestSource != 'google') {
                 $msgs = [];
 
                 if (is_numeric($keys[0])) {
-                    for ($i = 0; $i < sizeof($messages); $i++) {
-                        $msgs[$i] = $messages[$i]->text->text[0];
+                    for ($i = 0; $i < sizeof($messages[0]); $i++) {
+                        $msgs[$i] = $messages[0][$i]->text->text[0];
                     }
                 } elseif ($keys[0] == 'text') {
                     $msgs[] = $messages['text']['text'][0];
                 }
 
+                // this cannot be an array for reasons that are dumb
                 $out['fulfillmentText'] = implode("\n", $msgs);
             }
         }
