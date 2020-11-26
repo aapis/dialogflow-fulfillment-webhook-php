@@ -500,54 +500,45 @@ class WebhookClient extends RichMessage
      */
     protected function renderV2()
     {
-        $out = [];
-
-        $messages = [];
+        $out = [
+            'fulfillmentMessages' => []
+        ];
 
         foreach ($this->messages as $message) {
             if ($message instanceof Payload) {
                 $out['payload'] = $message->render();
             } else if ($message instanceof TextList) {
-                $pushed = array_push($messages, $message->render());
 
                 if ($this->requestSource == 'google') {
-                    // this is correct due to how this response type is built
-                    // (compared to, say, a similar condition a few lines down which
-                    // appears to indicate the opposite)
-                    $out['fulfillmentMessages'] = $messages[0];
+                    $out['fulfillmentMessages'] = [$message->render()];
                 } else {
                     $out['fulfillmentMessages'] = array_merge(
-                        $messages,
+                        $out['fulfillmentMessages'],
                         $message->render()
                     );
                 }
             } else {
-                $pushed = array_push($messages, $message->render());
-
-                if ($this->requestSource == 'google') {
-                    // google response expects an array
-                    $out['fulfillmentMessages'] = $messages;
-                } else {
-                    // non-google responses expect the message object directly
-                    $out['fulfillmentMessages'] = $messages[0];
-                }
+                $out['fulfillmentMessages'] = $message->render();
             }
         }
 
-        $keys = array_keys($messages);
-
         if ($this->text) {
             $out['fulfillmentText'] = $this->text;
-        } else if ((sizeof($messages) > 0 && is_null($this->text))) {
-            if ($this->requestSource != 'google') {
+        } else {
+            // fulfillmentText is the field the signalwire app will use for content
+            // it sends to phone/SMS clients.  GH devices don't have/need this field
+            // so only build it when required
+            $keys = array_keys($out['fulfillmentMessages']);
+
+            if ($this->requestSource != 'google' && sizeof($keys) > 0) {
                 $msgs = [];
 
                 if (is_numeric($keys[0])) {
-                    for ($i = 0; $i < sizeof($messages[0]); $i++) {
-                        $msgs[$i] = $messages[0][$i]->text->text[0];
+                    for ($i = 0; $i < sizeof($out['fulfillmentMessages']); $i++) {
+                        $msgs[$i] = $out['fulfillmentMessages'][$i]->text->text[0];
                     }
                 } elseif ($keys[0] == 'text') {
-                    $msgs[] = $messages['text']['text'][0];
+                    $msgs[] = $out['fulfillmentMessages']['text']['text'][0];
                 }
 
                 // this cannot be an array for reasons that are dumb
