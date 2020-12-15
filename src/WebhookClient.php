@@ -147,6 +147,8 @@ class WebhookClient extends RichMessage
                 $this->requestSource = $this->originalRequest['payload']['source'];
             } elseif (isset($this->originalRequest['payload']['SmsSid'])) {
                 $this->requestSource = 'SMS';
+            } elseif (isset($this->originalRequest['payload']['telephony'])) {
+                $this->requestSource = 'voice';
             }
         }
 
