@@ -14,6 +14,7 @@ abstract class RichMessage
     protected $fallbackText;
 
     protected $v2PlatformMap = [
+        'DIALOGFLOW_CONSOLE' => 'PLATFORM_UNSPECIFIED',
         'unspecified'   => 'PLATFORM_UNSPECIFIED',
         'facebook'      => 'FACEBOOK',
         'slack'         => 'SLACK',
