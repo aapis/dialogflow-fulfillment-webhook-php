@@ -535,16 +535,28 @@ class WebhookClient extends RichMessage
             if ($this->requestSource != 'google' && sizeof($keys) > 0) {
                 $msgs = [];
 
-                if (is_numeric($keys[0])) {
-                    for ($i = 0; $i < sizeof($out['fulfillmentMessages']); $i++) {
-                        $msgs[$i] = $out['fulfillmentMessages'][$i]->text->text[0];
-                    }
-                } elseif ($keys[0] == 'text') {
-                    $msgs[] = $out['fulfillmentMessages']['text']['text'][0];
-                }
+                $isTelephonyTransfer = (
+                    isset($out['fulfillmentMessages'][0]) ?
+                    $out['fulfillmentMessages'][0]['platform'] == 'TELEPHONY' :
+                    false
+                );
 
-                // this cannot be an array for reasons that are dumb
-                $out['fulfillmentText'] = implode("\n", $msgs);
+                if ($isTelephonyTransfer) {
+                    // telephony payload doesn't need this field
+                    $out['fulfillmentText'] = '';
+                } else {
+                    if (is_numeric($keys[0])) {
+                        for ($i = 0; $i < sizeof($out['fulfillmentMessages']); $i++) {
+                            $msgs[$i] = $out['fulfillmentMessages'][$i]->text->text[0];
+                        }
+                    } elseif ($keys[0] == 'text') {
+                        $msgs[] = $out['fulfillmentMessages']['text']['text'][0];
+                    }
+
+
+                    // this cannot be an array for reasons that are dumb
+                    $out['fulfillmentText'] = implode("\n", $msgs);
+                }
             }
         }
 
