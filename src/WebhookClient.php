@@ -520,7 +520,7 @@ class WebhookClient extends RichMessage
                     );
                 }
             } else {
-                $out['fulfillmentMessages'] = $message->render();
+                array_push($out['fulfillmentMessages'], $message->render());
             }
         }
 
