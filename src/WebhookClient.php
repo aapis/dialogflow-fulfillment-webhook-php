@@ -535,9 +535,13 @@ class WebhookClient extends RichMessage
             if ($this->requestSource != 'google' && sizeof($keys) > 0) {
                 $msgs = [];
 
+                $firstMessage = $out['fulfillmentMessages'][0] ?? null;
+
                 $isTelephonyTransfer = (
-                    isset($out['fulfillmentMessages'][0]) ?
-                    $out['fulfillmentMessages'][0]['platform'] == 'TELEPHONY' :
+                    isset($firstMessage) &&
+                    is_array($firstMessage) &&
+                    isset($firstMessage['platform']) ?
+                    $firstMessage['platform'] == 'TELEPHONY' :
                     false
                 );
 
